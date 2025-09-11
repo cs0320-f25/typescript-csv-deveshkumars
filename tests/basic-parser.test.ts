@@ -31,7 +31,7 @@ test("parseCSV can use a schema", async () => {
 
   type Person = z.infer<typeof PersonRowSchema>;
 
-  const results = await parseCSV<Person>(path.join(__dirname, "../data/goodpeople.csv"), PersonRowSchema)
+  const results = await parseCSV<Person>(path.join(__dirname, "../data/goodpeople.csv"), PersonRowSchema, true)
   
   expect(results).toHaveLength(4); // one row should fail to parse
   expect(results[0]).toEqual({name: "Alice", age: 23});

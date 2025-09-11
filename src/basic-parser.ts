@@ -30,15 +30,19 @@ export async function parseCSV<T>(path: string, schema?: ZodType<T>, header?: bo
   // We add the "await" here because file I/O is asynchronous. 
   // We need to force TypeScript to _wait_ for a row before moving on. 
   // More on this in class soon!
-
+  
+  let onHeader = true;
   if (!schema) {
     for await (const line of rl) {
+      if (header && header == true && onHeader) {
+        onHeader = false;
+        continue;
+      }
       const values = line.split(",").map((v) => v.trim());
       result.push(values)
     }
     return result
   } else {
-    let onHeader = true;
     for await (const line of rl) {
       if (header && header == true && onHeader) {
         onHeader = false;
@@ -50,9 +54,9 @@ export async function parseCSV<T>(path: string, schema?: ZodType<T>, header?: bo
         result.push(values.data)
       } else {
         // console.error("Failed to parse row:", values.error);
-        console.log("Failed to parse row:" + line);
+        // console.log("Failed to parse row:" + line);
 
-        // return Promise.reject("Failed to parse row");
+        return Promise.reject("Failed to parse row");
       }
     }
     return result
