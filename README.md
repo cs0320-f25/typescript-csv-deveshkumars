@@ -8,7 +8,7 @@
 2. It needs to be able to ask how empty rows should be dealt with (ignored or empty array)
 3. Should the CSV be parsed as an array of arrays or an array of objects?
 4. Should the parser ensure that data is well formed in terms of missing columns and extra columns, or is that the responsibility of the user?
-5. should email values be checked? 
+5. How should misplaced newlines be dealt with?
 6. should data types be enforced? 
 7. How would a single quotation be dealt with (escaped quote)? 
 8. Should a label row be treated differently? How will the parser know that there is a header row?
@@ -40,12 +40,26 @@ AI is quite non-deterministic in its nature, and that was seen here. While I exp
 
     Include a list of the top 4 enhancements or edge cases you think are most valuable to explore in the next week’s sprint. Label them clearly by category (extensibility vs. functionality), and include whether they came from you, the LLM, or both. Describe these using the User Story format—see below for a definition. 
 
-    1. Quotations - Functionality - Both me and the LLM
-    2. Escaped Quote - Functionality - Both me and the LLM
-    3. 
-    4. 
+    *Note: When I say both me and the LLM, that means I came up with it first and one of my LLM prompts also brought it up.*
+
+    1. Commas in Quotations - Functionality - Both me and the LLM
+    As a user of the application, I can parse a CSV that will correctly handle commas placed within quotation marks so that a quote like "veni, vidi, vici" is not split up into separate columns.
+    2. Empty Columns/Inconsistent Column Counts - Extensibility - Both me and the LLM
+    As a user of the application, I can indiciate how I want rows with inconsistent rows to be handled so that I can avoid errors later in my application
+    Acceptance Criteria:
+    - The default behavior will be to not to react at all to inconsistent rows
+    - The user can indicate whether they would like padding with undefined values, an error, or for the row to be thrown out
+    3. Label Row - Extensibility - Both me and the LLM
+    As a user of the application, I want to be able to indicate to the application that the first row of my CSV is a row of labels so that the program can execute logic based on that information.
+    Acceptance Criteria:
+    - User can specify whether the CSV data includes a header row, the default is that there is a header row
+    - User can specify whether or not the header row should be included
+    4. Newslines within fields - Functionality - Both me and the LLM
+    As a user of the program, I can include a newline character within a column without the program thinking that it's a row delimiter so that I can include richer data within each column of the CSV.
 
     Include your notes from above: what were your initial ideas, what did the LLM suggest, and how did the results differ by prompt? What resonated with you, and what didn’t? (3-5 sentences.) 
+
+    My initial ideas were that the parser should be able ot parse commas inside quotations, handle empty rows, deal with misplaced newlines, enforce data types, and other similar issues. The LLM suggested a pretty similar set of ideas, but didn't take into account the existence of Zod and included ideas that aren't part of the official CSV spec, like comments. I liked how the LLM was able to identify key edge cases, but I also realized how every idea needed to be validated by a human otherwise a hallucination would get through. Also, I realized that context is important.
 
 ### Design Choices
 
