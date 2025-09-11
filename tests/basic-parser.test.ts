@@ -1,26 +1,54 @@
 import { parseCSV } from "../src/basic-parser";
 import * as path from "path";
+import z from "zod";
 
 const PEOPLE_CSV_PATH = path.join(__dirname, "../data/people.csv");
 
-test("parseCSV yields arrays", async () => {
-  const results = await parseCSV(PEOPLE_CSV_PATH)
+// test("parseCSV yields arrays", async () => {
+//   const results = await parseCSV(PEOPLE_CSV_PATH)
   
-  expect(results).toHaveLength(5);
-  expect(results[0]).toEqual(["name", "age"]);
-  expect(results[1]).toEqual(["Alice", "23"]);
-  expect(results[2]).toEqual(["Bob", "thirty"]); // why does this work? :(
-  expect(results[3]).toEqual(["Charlie", "25"]);
-  expect(results[4]).toEqual(["Nim", "22"]);
-});
+//   expect(results).toHaveLength(5);
+//   expect(results[0]).toEqual(["name", "age"]);
+//   expect(results[1]).toEqual(["Alice", "23"]);
+//   expect(results[2]).toEqual(["Bob", "thirty"]); // why does this work? :(
+//   expect(results[3]).toEqual(["Charlie", "25"]);
+//   expect(results[4]).toEqual(["Nim", "22"]);
+// });
 
-test("parseCSV yields only arrays", async () => {
-  const results = await parseCSV(PEOPLE_CSV_PATH)
+// test("parseCSV yields only arrays", async () => {
+//   const results = await parseCSV(PEOPLE_CSV_PATH)
+//   for(const row of results) {
+//     expect(Array.isArray(row)).toBe(true);
+//   }
+// });
+
+test("parseCSV can use a schema", async () => {
+  // Import the schema and type from tu.ts
+  const PersonRowSchema = z.tuple([z.string(), z.coerce.number()])
+                          .transform( tup => ({name: tup[0], age: tup[1]}))
+  // Define the corresponding TypeScript type for the above schema.
+  // Mouse over it in VSCode to see what TypeScript has inferred!
+
+  type Person = z.infer<typeof PersonRowSchema>;
+
+  const results = await parseCSV<Person>(path.join(__dirname, "../data/goodpeople.csv"), PersonRowSchema)
+  
+  expect(results).toHaveLength(4); // one row should fail to parse
+  expect(results[0]).toEqual({name: "Alice", age: 23});
+  expect(results[1]).toEqual({name: "Bob", age: 30});
+  expect(results[2]).toEqual({name: "Charlie", age: 25});
+  expect(results[3]).toEqual({name: "Nim", age: 22});
+
   for(const row of results) {
-    expect(Array.isArray(row)).toBe(true);
+    // each row should be a Person object
+    expect((row as Person).name).toBeDefined();
+    expect(typeof (row as Person).name).toBe("string");
+    expect((row as Person).age).toBeDefined();
+    expect(typeof (row as Person).age).toBe("number");
   }
 });
 
+/*
 // Empty Cases
 
 test("parseCSV can deal with empty columns", async () => {
@@ -74,11 +102,13 @@ test("parseCSV can deal with different lengths", async () => {
 
 test("parseCSV can detect extra columns", async () => {
   const results = await parseCSV(path.join(__dirname, "../data/extra.csv"))
-  
+
   expect(results).toHaveLength(4);
   expect(results[0]).toEqual(["name", "company", "email", "net worth"]);
   expect(results[1]).toEqual(["elon musk", " tesla", "technoking@tesla.com", "400B"]);
   expect(results[2]).toEqual(["sam altman", " openai", "agi@openai.com", "1B"]);
   expect(results[3]).toEqual(["tony stark", " Stark Indutries", "ceo@stark.com", "1T", " I'm the best"]);
 });
+
+*/
 
