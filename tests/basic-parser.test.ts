@@ -4,32 +4,32 @@ import z from "zod";
 
 const PEOPLE_CSV_PATH = path.join(__dirname, "../data/people.csv");
 
-// test("parseCSV yields arrays", async () => {
-//   const results = await parseCSV(PEOPLE_CSV_PATH)
+test("parseCSV yields arrays", async () => {
+  const results = await parseCSV(PEOPLE_CSV_PATH)
   
-//   expect(results).toHaveLength(5);
-//   expect(results[0]).toEqual(["name", "age"]);
-//   expect(results[1]).toEqual(["Alice", "23"]);
-//   expect(results[2]).toEqual(["Bob", "thirty"]); // why does this work? :(
-//   expect(results[3]).toEqual(["Charlie", "25"]);
-//   expect(results[4]).toEqual(["Nim", "22"]);
-// });
+  expect(results).toHaveLength(5);
+  expect(results[0]).toEqual(["name", "age"]);
+  expect(results[1]).toEqual(["Alice", "23"]);
+  expect(results[2]).toEqual(["Bob", "thirty"]); // why does this work? :(
+  expect(results[3]).toEqual(["Charlie", "25"]);
+  expect(results[4]).toEqual(["Nim", "22"]);
+});
 
-// test("parseCSV yields only arrays", async () => {
-//   const results = await parseCSV(PEOPLE_CSV_PATH)
-//   for(const row of results) {
-//     expect(Array.isArray(row)).toBe(true);
-//   }
-// });
+test("parseCSV yields only arrays", async () => {
+  const results = await parseCSV(PEOPLE_CSV_PATH)
+  for(const row of results) {
+    expect(Array.isArray(row)).toBe(true);
+  }
+});
 
-test("parseCSV can use a schema", async () => {
+test("parseCSV can use a schema with a header", async () => {
   // Import the schema and type from tu.ts
   const PersonRowSchema = z.tuple([z.string(), z.coerce.number()])
                           .transform( tup => ({name: tup[0], age: tup[1]}))
   // Define the corresponding TypeScript type for the above schema.
   // Mouse over it in VSCode to see what TypeScript has inferred!
 
-  type Person = z.infer<typeof PersonRowSchema>;
+  type Person = z.infer<typeof PersonRowSchema>; // why?
 
   const results = await parseCSV<Person>(path.join(__dirname, "../data/goodpeople.csv"), PersonRowSchema, true)
   
@@ -48,7 +48,33 @@ test("parseCSV can use a schema", async () => {
   }
 });
 
-/*
+test("parseCSV can use a schema without a header", async () => {
+  // Import the schema and type from tu.ts
+  const PersonRowSchema = z.tuple([z.string(), z.coerce.number()])
+                          .transform( tup => ({name: tup[0], age: tup[1]}))
+  // Define the corresponding TypeScript type for the above schema.
+  // Mouse over it in VSCode to see what TypeScript has inferred!
+
+  type Person = z.infer<typeof PersonRowSchema>; // why?
+
+  const results = await parseCSV<Person>(path.join(__dirname, "../data/gooderpeople.csv"), PersonRowSchema, false)
+  
+  expect(results).toHaveLength(4); // one row should fail to parse
+  expect(results[0]).toEqual({name: "Alice", age: 23});
+  expect(results[1]).toEqual({name: "Bob", age: 30});
+  expect(results[2]).toEqual({name: "Charlie", age: 25});
+  expect(results[3]).toEqual({name: "Nim", age: 22});
+
+  for(const row of results) {
+    // each row should be a Person object
+    expect((row as Person).name).toBeDefined();
+    expect(typeof (row as Person).name).toBe("string");
+    expect((row as Person).age).toBeDefined();
+    expect(typeof (row as Person).age).toBe("number");
+  }
+});
+
+
 // Empty Cases
 
 test("parseCSV can deal with empty columns", async () => {
@@ -110,5 +136,48 @@ test("parseCSV can detect extra columns", async () => {
   expect(results[3]).toEqual(["tony stark", " Stark Indutries", "ceo@stark.com", "1T", " I'm the best"]);
 });
 
-*/
+test("parseCSV can detect misplaced newlines", async () => {
+  const results = await parseCSV(path.join(__dirname, "../data/misplacednewlines.csv"))
+
+  expect(results).toHaveLength(4);
+  expect(results[0]).toEqual(["name", "company", "email", "net worth"]);
+  expect(results[1]).toEqual(["elon musk", " tesla", "technoking@tesla.com", "400B"]);
+  expect(results[2]).toEqual(["sam altman", " openai\n", "agi@openai.com", "1B"]);
+  expect(results[3]).toEqual(["tony stark", " Stark Indutries", "ceo@stark.com", "1T", " I'm the best"]);
+});
+
+test("parseCSV can deal with different delimiters", async () => {
+  const results = await parseCSV(path.join(__dirname, "../data/europe.csv"))
+  
+  expect(results).toHaveLength(4); // one row should fail to parse
+  expect(results[0]).toEqual({name: "Alice", age: 23});
+  expect(results[1]).toEqual({name: "Bob", age: 30});
+  expect(results[2]).toEqual({name: "Charlie", age: 25});
+  expect(results[3]).toEqual({name: "Nim", age: 22});
+});
+
+test("SUPPLEMENTAL CHALLENGE: parseCSV can deal with a linked list schema", async () => {
+  // Define a schema for a linked list node
+
+  // Credits to Google AI Overview for helping me "how to represent an linked list in zod"
+
+  type Node = {value: string, next: Node | null}
+
+  const NodeSchema: z.ZodType<Node> = z.lazy(() => 
+    z.object({
+      value: z.string(),
+      next: z.union([z.lazy(() => NodeSchema), z.null()]) // recursive definition
+    })
+  );
+  
+  type LinkedList = Node | null;
+
+  const LinkedListSchema: z.ZodType<LinkedList> = z.union([z.literal(null), NodeSchema]);
+
+  // const llresult: Node = NodeSchema.parse("...dsfdsfds");
+
+  const results = NodeSchema.parse("LeBron, Michael Jordan, Kevin Durant, Kareem Adbul Jabbar".split(",").map((v) => v.trim()));
+
+  console.log(results);
+});
 

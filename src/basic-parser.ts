@@ -3,17 +3,12 @@ import * as readline from "readline";
 import z, { ZodType } from "zod";
 
 /**
- * This is a JSDoc comment. Similar to JavaDoc, it documents a public-facing
- * function for others to use. Most modern editors will show the comment when 
- * mousing over this function name. Try it in run-parser.ts!
- * 
- * File I/O in TypeScript is "asynchronous", meaning that we can't just
- * read the file and return its contents. You'll learn more about this 
- * in class. For now, just leave the "async" and "await" where they are. 
- * You shouldn't need to alter them.
+ * A CSV parser that takes a CSV file and outputs an array of strings, or objects if a Zod Schema is specified.
  * 
  * @param path The path to the file being loaded.
- * @returns a "promise" to produce a 2-d array of cell values
+ * @param schema An optional Zod schema to validate each row. If not provided, the function returns a 2D array of strings.
+ * @param header An optional boolean indicating whether the first row is a header row. If true, the first row is skipped.
+ * @returns a "promise" to produce either a 2D array of strings if no schema or an array of objects as specified by the schema.
  */
 export async function parseCSV<T>(path: string, schema?: ZodType<T>, header?: boolean): Promise<string[][] | T[]> {
   // This initial block of code reads from a file in Node.js. The "rl"
@@ -30,9 +25,9 @@ export async function parseCSV<T>(path: string, schema?: ZodType<T>, header?: bo
   // We add the "await" here because file I/O is asynchronous. 
   // We need to force TypeScript to _wait_ for a row before moving on. 
   // More on this in class soon!
-  
   let onHeader = true;
   if (!schema) {
+    // This block runs if no schema is provided
     for await (const line of rl) {
       if (header && header == true && onHeader) {
         onHeader = false;
@@ -43,6 +38,7 @@ export async function parseCSV<T>(path: string, schema?: ZodType<T>, header?: bo
     }
     return result
   } else {
+    // This block runs if a schema is provided
     for await (const line of rl) {
       if (header && header == true && onHeader) {
         onHeader = false;

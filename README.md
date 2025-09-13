@@ -65,17 +65,74 @@ AI is quite non-deterministic in its nature, and that was seen here. While I exp
 
 ### 1340 Supplement
 
+I created a LinkedList schema in Zod to parse a CSV.
+
+```typescript
+// For more, see basic-parser.test.ts
+// More is included at the bottom of that file
+// This schema should correctly represent a Zod Schema, but there's some tweaks needed to be able to transform CSV files
+type Node = {value: string, next: Node | null}
+
+const NodeSchema: z.ZodType<Node> = z.lazy(() => 
+z.object({
+    value: z.string(),
+    next: z.union([z.lazy(() => NodeSchema), z.null()]) // recursive definition
+})
+);
+
+type LinkedList = Node | null;
+
+const LinkedListSchema: z.ZodType<LinkedList> = z.union([z.literal(null), NodeSchema]);
+```
+
 - #### 1. Correctness
+
+A correct CSV parser must convert the file's contents into a format that is helpful for developers' purposes. A correct CSV parser must be able to handle tough edge cases, and have extensive customization for developers to be able to tweak the output for their needs.
+
+In Particular:
+- the CSV parser should be able to deal with tough edge cases
+- the CSV parser should offer a plethora of options to customize the output
+- the CSV parser should return an output that the developer can easily index into and find data
+- the CSV parser should be able to validate data
 
 - #### 2. Random, On-Demand Generation
 
+Random, on-demand generation can help ensure that biases in the test suite don't hold back its strength by utilizing the power of **non-determinism**. Currently, my testing suite is deterministic. It will either pass every single time or fail every single time. While this may seem beneficial, all it does is instill false hope in a developer since it's possible a test case exists that they haven't yet considered. Moreover, a random CSV generator is going to be able to generate cases that a human would not be able to think of. Human biases are towards simpler, logical, and easier to understand test cases. The random test cases can go well beyond that and find the outer edges of the program's functionality.
+
+
 - #### 3. Overall experience, Bugs encountered and resolved
 #### Errors/Bugs:
+For the purposes of this sprint, all functionality is in place and functioning. For the supplement, the schema is created and is capable of holding the data, but some additional work is needed for test cases can pass. Not all the tests pass yet because some functionality for dealing with quotations, newlines, empty columns, etc. is not yet implemented.
 #### Tests:
+✓ parseCSV yields arrays  
+✓ parseCSV yields only arrays  
+✓ parseCSV can use a schema with a header  
+✓ parseCSV can use a schema without a header  
+✓ parseCSV can deal with empty columns  
+✕ parseCSV can deal with empty rows  
+✓ parseCSV can deal with empty file  
+✕ parseCSV can deal with quotes  
+✓ parseCSV can deal with different lengths  
+✕ parseCSV can detect extra columns  
+✕ parseCSV can detect misplaced newlines  
+✕ parseCSV can deal with different delimiters  
+✕ SUPPLEMENTAL CHALLENGE: parseCSV can deal with a linked list schema  
 #### How To…
+It's recommended to run tests
+```bash
+# To run code
+npm run run
+# To run tests
+npm run test
+```
+
+
 
 #### Team members and contributions (include cs logins):
-
 #### Collaborators (cslogins of anyone you worked with on this project and/or generative AI):
+- I used tab completions to help speed up the process of creating tests
+- I used Google AI Overview to help with the supplement "how to represent an linked list in zod"
 #### Total estimated time it took to complete project:
-#### Link to GitHub Repo:  
+6 hours
+#### Link to GitHub Repo:
+https://github.com/cs0320-f25/typescript-csv-deveshkumars   
