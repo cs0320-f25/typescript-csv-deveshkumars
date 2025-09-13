@@ -10,7 +10,7 @@ test("parseCSV yields arrays", async () => {
   expect(results).toHaveLength(5);
   expect(results[0]).toEqual(["name", "age"]);
   expect(results[1]).toEqual(["Alice", "23"]);
-  expect(results[2]).toEqual(["Bob", "thirty"]); // why does this work? :(
+  expect(results[2]).toEqual(["Bob", "thirty"]);
   expect(results[3]).toEqual(["Charlie", "25"]);
   expect(results[4]).toEqual(["Nim", "22"]);
 });
@@ -23,22 +23,20 @@ test("parseCSV yields only arrays", async () => {
 });
 
 test("parseCSV can use a schema with a header", async () => {
-  // Import the schema and type from tu.ts
   const PersonRowSchema = z.tuple([z.string(), z.coerce.number()])
                           .transform( tup => ({name: tup[0], age: tup[1]}))
-  // Define the corresponding TypeScript type for the above schema.
-  // Mouse over it in VSCode to see what TypeScript has inferred!
 
-  type Person = z.infer<typeof PersonRowSchema>; // why?
+  type Person = z.infer<typeof PersonRowSchema>;
 
   const results = await parseCSV<Person>(path.join(__dirname, "../data/goodpeople.csv"), PersonRowSchema, true)
   
-  expect(results).toHaveLength(4); // one row should fail to parse
+  expect(results).toHaveLength(4);
   expect(results[0]).toEqual({name: "Alice", age: 23});
   expect(results[1]).toEqual({name: "Bob", age: 30});
   expect(results[2]).toEqual({name: "Charlie", age: 25});
   expect(results[3]).toEqual({name: "Nim", age: 22});
 
+  // make sure all the types are correct
   for(const row of results) {
     // each row should be a Person object
     expect((row as Person).name).toBeDefined();
@@ -57,8 +55,9 @@ test("parseCSV can use a schema without a header", async () => {
 
   type Person = z.infer<typeof PersonRowSchema>; // why?
 
-  const results = await parseCSV<Person>(path.join(__dirname, "../data/gooderpeople.csv"), PersonRowSchema, false)
+  const results = await parseCSV<Person>(path.join(__dirname, "../data/peoplewithoutheader.csv"), PersonRowSchema, false)
   
+  // make sure all the types are correct
   expect(results).toHaveLength(4); // one row should fail to parse
   expect(results[0]).toEqual({name: "Alice", age: 23});
   expect(results[1]).toEqual({name: "Bob", age: 30});
@@ -74,8 +73,9 @@ test("parseCSV can use a schema without a header", async () => {
   }
 });
 
-
+// -----------
 // Empty Cases
+// -----------
 
 test("parseCSV can deal with empty columns", async () => {
   const results = await parseCSV(path.join(__dirname, "../data/emptycols.csv"))
@@ -91,7 +91,7 @@ test("parseCSV can deal with empty columns", async () => {
 test("parseCSV can deal with empty rows", async () => {
   const results = await parseCSV(path.join(__dirname, "../data/emptyrows.csv"))
   
-  // user should specify, but default behavior is t
+  // user should specify, but default behavior is to ignore empty rows
 
   expect(results).toHaveLength(4);
   expect(results[0]).toEqual(["name", "age"]);
@@ -126,14 +126,24 @@ test("parseCSV can deal with different lengths", async () => {
   expect(results[4]).toEqual(["LeBron", "22", "3.9"]);
 });
 
-test("parseCSV can detect extra columns", async () => {
-  const results = await parseCSV(path.join(__dirname, "../data/extra.csv"))
+test("parseCSV can handle extra columns", async () => {
+  const results = await parseCSV(path.join(__dirname, "../data/extradetails.csv"))
+
+  expect(results).toHaveLength(4);
+  expect(results[0]).toEqual(["name", "company", "email", "net worth"]);
+  expect(results[1]).toEqual(["elon musk", "tesla", "technoking@tesla.com", "400B"]);
+  expect(results[2]).toEqual(["sam altman", "openai", "agi@openai.com", "1B"]);
+  expect(results[3]).toEqual(["tony stark", "Stark Indutries", "ceo@stark.com", "1T", "I'm the best"]);
+});
+
+test("parseCSV can handle awkward spacing", async () => {
+  const results = await parseCSV(path.join(__dirname, "../data/extraspacing.csv"))
 
   expect(results).toHaveLength(4);
   expect(results[0]).toEqual(["name", "company", "email", "net worth"]);
   expect(results[1]).toEqual(["elon musk", " tesla", "technoking@tesla.com", "400B"]);
   expect(results[2]).toEqual(["sam altman", " openai", "agi@openai.com", "1B"]);
-  expect(results[3]).toEqual(["tony stark", " Stark Indutries", "ceo@stark.com", "1T", " I'm the best"]);
+  expect(results[3]).toEqual(["tony stark", " Stark Indutries", "ceo@stark.com", "1T"]);
 });
 
 test("parseCSV can detect misplaced newlines", async () => {

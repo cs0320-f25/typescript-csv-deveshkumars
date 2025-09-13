@@ -62,6 +62,7 @@ AI is quite non-deterministic in its nature, and that was seen here. While I exp
     My initial ideas were that the parser should be able ot parse commas inside quotations, handle empty rows, deal with misplaced newlines, enforce data types, and other similar issues. The LLM suggested a pretty similar set of ideas, but didn't take into account the existence of Zod and included ideas that aren't part of the official CSV spec, like comments. I liked how the LLM was able to identify key edge cases, but I also realized how every idea needed to be validated by a human otherwise a hallucination would get through. Also, I realized that context is important.
 
 ### Design Choices
+- Parser should ignore empty rows
 
 ### 1340 Supplement
 
@@ -113,7 +114,8 @@ For the purposes of this sprint, all functionality is in place and functioning. 
 ✓ parseCSV can deal with empty file  
 ✕ parseCSV can deal with quotes  
 ✓ parseCSV can deal with different lengths  
-✕ parseCSV can detect extra columns  
+✕ parseCSV can handle extra columns  
+✕ parseCSV can handle awkward spacing  
 ✕ parseCSV can detect misplaced newlines  
 ✕ parseCSV can deal with different delimiters  
 ✕ SUPPLEMENTAL CHALLENGE: parseCSV can deal with a linked list schema  
@@ -132,6 +134,10 @@ npm run test
 #### Collaborators (cslogins of anyone you worked with on this project and/or generative AI):
 - I used tab completions to help speed up the process of creating tests
 - I used Google AI Overview to help with the supplement "how to represent an linked list in zod"
+- I used AI as instructued in Part B
+    - https://g.co/gemini/share/6252059de645
+    - https://g.co/gemini/share/6a28041d93b1
+    - https://g.co/gemini/share/71e457cb8c5a 
 #### Total estimated time it took to complete project:
 6 hours
 #### Link to GitHub Repo:
