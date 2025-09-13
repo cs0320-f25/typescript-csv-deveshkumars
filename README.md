@@ -66,6 +66,8 @@ AI is quite non-deterministic in its nature, and that was seen here. While I exp
 - Parser takes in schema as an optional argument. If it is not passed in, it returns to its default behavior
 - Parser takes in an optional argument for a header. If it is not passed in, it is assumed that there IS a header
 
+For testing, I saved CSVs into files so that future testing files could have access to them and reuse examples.
+
 ### 1340 Supplement
 
 I created a LinkedList schema in Zod to parse a CSV.
